@@ -1,0 +1,1 @@
+DROP DATABASE spring_hiber;

@@ -1,5 +1,6 @@
 package hiber.config;
 
+import hiber.model.Car;
 import hiber.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -7,7 +8,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -25,6 +28,7 @@ public class AppConfig {
    @Autowired
    private Environment env;
 
+
    @Bean
    public DataSource getDataSource() {
       DriverManagerDataSource dataSource = new DriverManagerDataSource();
@@ -32,6 +36,11 @@ public class AppConfig {
       dataSource.setUrl(env.getProperty("db.url"));
       dataSource.setUsername(env.getProperty("db.username"));
       dataSource.setPassword(env.getProperty("db.password"));
+
+      ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
+      databasePopulator.addScript(new ClassPathResource("schema.sql"));
+      databasePopulator.execute(dataSource);
+
       return dataSource;
    }
 
@@ -41,11 +50,13 @@ public class AppConfig {
       factoryBean.setDataSource(getDataSource());
       
       Properties props=new Properties();
+
       props.put("hibernate.show_sql", env.getProperty("hibernate.show_sql"));
       props.put("hibernate.hbm2ddl.auto", env.getProperty("hibernate.hbm2ddl.auto"));
+      props.put("hibernate.dialect", env.getProperty("hibernate.dialect"));
 
       factoryBean.setHibernateProperties(props);
-      factoryBean.setAnnotatedClasses(User.class);
+      factoryBean.setAnnotatedClasses(User.class, Car.class);
       return factoryBean;
    }
 
